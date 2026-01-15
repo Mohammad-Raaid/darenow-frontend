@@ -23,6 +23,18 @@ import Contact from './pages/Contact';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsConditions from './pages/TermsConditions';
 
+import CouponList from './pages/CouponList';
+import CreateCoupon from './pages/CreateCoupon';
+import EditCoupon from './pages/EditCoupon';
+import ViewCoupon from './pages/ViewCoupon';
+import MallList from './pages/MallList';
+import CreateMall from './pages/CreateMall';
+import EditMall from './pages/EditMall';
+import MallGeofenceDetail from './pages/MallGeofenceDetail';
+import MallCoupons from './pages/MallCoupons';
+import RewardList from './pages/RewardList';
+import CreateReward from './pages/CreateReward';
+
 function App() {
   return (
     <AuthProvider>
@@ -32,80 +44,169 @@ function App() {
             <Navbar />
             <main className="pt-16">
               <Routes>
-              <Route path="/" element={<Navigate to="/login" replace />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/terms-conditions" element={<TermsConditions />} />
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/restaurants"
-                element={
-                  <ProtectedRoute>
-                    <RestaurantList />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/restaurants/create"
-                element={
-                  <ProtectedRoute>
-                    <CreateRestaurant />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/restaurants/edit/:id"
-                element={
-                  <ProtectedRoute>
-                    <EditRestaurant />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/restaurants/:id"
-                element={
-                  <ProtectedRoute>
-                    <RestaurantDetails />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/update-password"
-                element={
-                  <ProtectedRoute>
-                    <UpdatePassword />
-                  </ProtectedRoute>
-                }
-              />
-              {/* Restaurant Routes */}
-              <Route path="/restaurant/login" element={<RestaurantLogin />} />
-              <Route
-                path="/restaurant/bookings"
-                element={
-                  <RestaurantProtectedRoute>
-                    <BookingsList />
-                  </RestaurantProtectedRoute>
-                }
-              />
-              <Route
-                path="/restaurant/create-booking"
-                element={
-                  <RestaurantProtectedRoute>
-                    <CreateBooking />
-                  </RestaurantProtectedRoute>
-                }
-              />
+                <Route path="/" element={<Navigate to="/login" replace />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/terms-conditions" element={<TermsConditions />} />
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/restaurants"
+                  element={
+                    <ProtectedRoute>
+                      <RestaurantList />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/restaurants/create"
+                  element={
+                    <ProtectedRoute>
+                      <CreateRestaurant />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/restaurants/edit/:id"
+                  element={
+                    <ProtectedRoute>
+                      <EditRestaurant />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/restaurants/:id"
+                  element={
+                    <ProtectedRoute>
+                      <RestaurantDetails />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/update-password"
+                  element={
+                    <ProtectedRoute>
+                      <UpdatePassword />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/coupons"
+                  element={
+                    <ProtectedRoute>
+                      <CouponList />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/coupons/create"
+                  element={
+                    <ProtectedRoute>
+                      <CreateCoupon />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/coupons/edit/:id"
+                  element={
+                    <ProtectedRoute>
+                      <EditCoupon />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/coupons/:id"
+                  element={
+                    <ProtectedRoute>
+                      <ViewCoupon />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Mall Routes */}
+                <Route
+                  path="/malls"
+                  element={
+                    <ProtectedRoute>
+                      <MallList />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/malls/create"
+                  element={
+                    <ProtectedRoute>
+                      <CreateMall />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/malls/edit/:id"
+                  element={
+                    <ProtectedRoute>
+                      <EditMall />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/malls/:id/geofences"
+                  element={
+                    <ProtectedRoute>
+                      <MallGeofenceDetail />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/malls/:id/coupons"
+                  element={
+                    <ProtectedRoute>
+                      <MallCoupons />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/rewards"
+                  element={
+                    <ProtectedRoute>
+                      <RewardList />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/rewards/create"
+                  element={
+                    <ProtectedRoute>
+                      <CreateReward />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path="/restaurant/login" element={<RestaurantLogin />} />
+                <Route
+                  path="/restaurant/bookings"
+                  element={
+                    <RestaurantProtectedRoute>
+                      <BookingsList />
+                    </RestaurantProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/restaurant/create-booking"
+                  element={
+                    <RestaurantProtectedRoute>
+                      <CreateBooking />
+                    </RestaurantProtectedRoute>
+                  }
+                />
               </Routes>
             </main>
             <Footer />

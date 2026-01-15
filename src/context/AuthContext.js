@@ -63,27 +63,27 @@ export const AuthProvider = ({ children }) => {
       dispatch({ type: 'SET_LOADING', payload: true });
       const encodedUsername = encodeURIComponent(username);
       const encodedPassword = encodeURIComponent(password);
-      const API_URL = process.env.REACT_APP_API_BASE_URL || 'http://3.111.88.208:3000/api';
+      const API_URL = process.env.REACT_APP_API_BASE_URL || 'http://ec2-3-111-88-208.ap-south-1.compute.amazonaws.com:3000/api';
       const response = await axios.get(`${API_URL}/admin/login/username/${encodedUsername}/password/${encodedPassword}`);
 
       // API returns JSON with token and adminData
       const token = response.data?.data?.token;
       const adminData = response.data?.data?.adminData;
-      const user = { 
-        username: adminData?.userName || username, 
+      const user = {
+        username: adminData?.userName || username,
         name: adminData?.userName || username, // Add name field for dashboard display
-        isAdmin: true, 
-        adminData 
+        isAdmin: true,
+        adminData
       };
-      
+
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
-      
+
       dispatch({
         type: 'LOGIN_SUCCESS',
         payload: { token, user },
       });
-      
+
       return { success: true };
     } catch (error) {
       dispatch({ type: 'LOGIN_FAIL' });
@@ -98,16 +98,16 @@ export const AuthProvider = ({ children }) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       const response = await api.post('/auth/register', { name, email, password });
-      
+
       const { token, user } = response.data;
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
-      
+
       dispatch({
         type: 'LOGIN_SUCCESS',
         payload: { token, user },
       });
-      
+
       return { success: true };
     } catch (error) {
       dispatch({ type: 'LOGIN_FAIL' });

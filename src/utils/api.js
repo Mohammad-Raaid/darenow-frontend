@@ -1,6 +1,7 @@
 import axios from 'axios';
+// test
 
-const API_URL = process.env.REACT_APP_API_BASE_URL || 'http://3.111.88.208:3000/api';
+const API_URL = process.env.REACT_APP_API_BASE_URL || 'http://ec2-3-111-88-208.ap-south-1.compute.amazonaws.com:3000/api';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -13,15 +14,15 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     // Check if this is a restaurant-specific route
-    const isRestaurantRoute = config.url?.includes('/table-booking') || 
-                              config.url?.includes('/place/login') ||
-                              config.url?.includes('/place/') && config.url?.includes('/slots');
-    
+    const isRestaurantRoute = config.url?.includes('/table-booking') ||
+      config.url?.includes('/place/login') ||
+      config.url?.includes('/place/') && config.url?.includes('/slots');
+
     // Use restaurant token for restaurant routes, otherwise use regular token
-    const token = isRestaurantRoute 
+    const token = isRestaurantRoute
       ? (localStorage.getItem('restaurantToken') || localStorage.getItem('token'))
       : localStorage.getItem('token');
-    
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -39,17 +40,17 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // Check if this is a public route that doesn't require authentication
       const isPublicRoute = error.config?.url?.includes('/place/search');
-      
+
       // Don't redirect for public routes, just return the error
       if (isPublicRoute) {
         return Promise.reject(error);
       }
-      
+
       // Check if this is a restaurant route
-      const isRestaurantRoute = error.config?.url?.includes('/table-booking') || 
-                                error.config?.url?.includes('/place/login') ||
-                                (error.config?.url?.includes('/place/') && error.config?.url?.includes('/slots'));
-      
+      const isRestaurantRoute = error.config?.url?.includes('/table-booking') ||
+        error.config?.url?.includes('/place/login') ||
+        (error.config?.url?.includes('/place/') && error.config?.url?.includes('/slots'));
+
       if (isRestaurantRoute) {
         localStorage.removeItem('restaurantToken');
         localStorage.removeItem('restaurant');
