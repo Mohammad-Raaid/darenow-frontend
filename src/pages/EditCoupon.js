@@ -135,6 +135,13 @@ const EditCoupon = () => {
         e.preventDefault();
 
         if (!validateForm()) return;
+        if (
+            formData.applicableMallIds.length === 0 ||
+            formData.applicableMallIds.some(id => isNaN(Number(id)))
+        ) {
+            showToast('Please select at least one valid Mall', 'error');
+            return;
+        }
 
         setSubmitting(true);
         try {

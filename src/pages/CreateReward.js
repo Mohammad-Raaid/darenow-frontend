@@ -38,7 +38,7 @@ const CreateReward = () => {
                 }
             } catch (error) {
                 console.error('Error fetching malls:', error);
-                showToast('Failed to load malls list', 'error');
+                showToast(error.response?.data?.message || 'Failed to load malls list', 'error');
                 setMalls([]);
             } finally {
                 setLoadingMalls(false);
@@ -67,7 +67,7 @@ const CreateReward = () => {
                 }
             } catch (error) {
                 console.error('Error fetching terminal coupons:', error);
-                showToast('Failed to load coupons for selected mall', 'error');
+                showToast(error.response?.data?.message || 'Failed to load coupons for selected mall', 'error');
                 setCoupons([]);
             } finally {
                 setLoadingCoupons(false);

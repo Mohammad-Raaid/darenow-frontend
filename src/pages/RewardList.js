@@ -44,8 +44,8 @@ const RewardList = () => {
             showToast('Reward config deleted successfully!', 'success');
             fetchRewards();
         } catch (error) {
-            console.error('Delete error:', error);
-            showToast('Failed to delete reward config', 'error');
+            console.error('Delete error:', error?.response?.data?.message);
+            showToast(error?.response?.data?.message || 'Failed to delete reward config');
         } finally {
             setDeleteModal({ isOpen: false, rewardId: null });
         }

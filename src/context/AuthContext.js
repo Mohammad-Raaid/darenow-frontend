@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
       dispatch({ type: 'SET_LOADING', payload: true });
       const encodedUsername = encodeURIComponent(username);
       const encodedPassword = encodeURIComponent(password);
-      const API_URL = process.env.REACT_APP_API_BASE_URL || 'http://ec2-3-111-88-208.ap-south-1.compute.amazonaws.com:3000/api';
+      const API_URL = process.env.REACT_APP_API_BASE_URL || 'https://ec2-3-111-88-208.ap-south-1.compute.amazonaws.com:3000/api';
       const response = await axios.get(`${API_URL}/admin/login/username/${encodedUsername}/password/${encodedPassword}`);
 
       // API returns JSON with token and adminData

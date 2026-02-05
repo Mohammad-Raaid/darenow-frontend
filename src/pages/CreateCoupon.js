@@ -105,15 +105,25 @@ const CreateCoupon = () => {
 
         if (!validateForm()) return;
 
+        // 🔴 applicableMallIds validation
+        if (
+            formData.applicableMallIds.length === 0 ||
+            formData.applicableMallIds.some(id => isNaN(Number(id)))
+        ) {
+            showToast('Please select at least one valid Mall', 'error');
+            return;
+        }
+
         setSubmitting(true);
+
         try {
             const payload = {
                 ...formData,
+
                 value: Number(formData.value),
                 usageLimit: Number(formData.usageLimit),
                 stepsRequired: Number(formData.stepsRequired),
                 applicableMallIds: formData.applicableMallIds.map(Number),
-                // Ensure dates are in the requested format (ISO string)
                 validFrom: new Date(formData.validFrom).toISOString(),
                 validTill: new Date(formData.validTill).toISOString(),
             };
@@ -121,13 +131,18 @@ const CreateCoupon = () => {
             await api.post('/admin/coupons', payload);
             showToast('Coupon created successfully!', 'success');
             navigate('/coupons');
+
         } catch (error) {
-            console.error('Create Coupon Error:', error);
-            showToast(error.response?.data?.message || 'Failed to create coupon', 'error');
+
+            showToast(
+                error.response?.data?.message || 'Failed to create coupon',
+                'error'
+            );
         } finally {
             setSubmitting(false);
         }
     };
+
 
     return (
         <div className="min-h-screen bg-gray-50 flex">

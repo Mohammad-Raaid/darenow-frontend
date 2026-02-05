@@ -58,8 +58,8 @@ const MallList = () => {
             showToast('Mall deleted successfully!', 'success');
             fetchMalls(pageNo);
         } catch (error) {
-            console.error('Delete error:', error);
-            showToast('Failed to delete mall', 'error');
+
+            showToast(error?.response?.data?.message || 'Failed to delete mall', 'error');
         } finally {
             setDeleteModal({ isOpen: false, mallId: null });
         }

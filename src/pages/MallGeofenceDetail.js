@@ -143,7 +143,11 @@ const MallGeofenceDetail = () => {
                                             <tr key={gf.geofenceId} className="hover:bg-gray-50/50 transition-colors group">
                                                 <td className="px-6 py-4">
                                                     <div className="font-bold text-gray-900 group-hover:text-[#EB422B] transition-colors">{gf.geofenceName}</div>
-                                                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter mt-0.5">ID: #{gf.geofenceId}</div>
+                                                    <div className="flex gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-tighter mt-0.5">
+                                                        <span>ID: #{gf.geofenceId}</span>
+                                                        <span className="text-gray-300">|</span>
+                                                        <span>Mall: #{gf.mallId}</span>
+                                                    </div>
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest border ${gf.polygon && gf.polygon.length > 0 ? 'bg-purple-50 text-purple-600 border-purple-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
@@ -158,8 +162,22 @@ const MallGeofenceDetail = () => {
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <div className="text-[11px] font-mono font-bold text-gray-500">
-                                                        {gf.latitude?.toFixed(6)}, {gf.longitude?.toFixed(6)}
+                                                    <div className="flex flex-col gap-1">
+                                                        {gf.polygon && gf.polygon.length > 0 ? (
+                                                            <div className="max-h-20 overflow-y-auto pr-2 custom-scrollbar">
+                                                                {gf.polygon.map((point, idx) => (
+                                                                    <div key={idx} className="text-[10px] font-mono font-bold text-gray-500 bg-gray-50 rounded px-1.5 py-0.5 mb-1 last:mb-0 border border-gray-100">
+                                                                        {point.lat.toFixed(6)}, {point.lng.toFixed(6)}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        ) : gf.latitude && gf.longitude ? (
+                                                            <div className="text-[11px] font-mono font-bold text-gray-500 bg-gray-50 rounded px-2 py-1 border border-gray-100 italic">
+                                                                {gf.latitude.toFixed(6)}, {gf.longitude.toFixed(6)}
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-[10px] text-gray-400 font-bold uppercase">N/A</span>
+                                                        )}
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
@@ -224,6 +242,7 @@ const MallGeofenceDetail = () => {
                     fetchData();
                 }}
                 geofenceData={editModal.geofence}
+                mallId={id}
                 mallName={mall?.mallName}
             />
 
