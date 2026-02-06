@@ -66,7 +66,7 @@ const Dashboard = () => {
   useEffect(() => {
     const init = async () => {
       setLoading(true);
-      await Promise.all([fetchStats(), fetchMalls()]);
+      await Promise.all([fetchMalls()]);
       await fetchAnalytics();
       setLoading(false);
     };
