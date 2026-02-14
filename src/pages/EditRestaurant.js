@@ -4,6 +4,8 @@ import api from '../utils/api';
 import TimePicker from '../components/TimePicker';
 import { useToast } from '../components/Toast';
 import Sidebar from '../components/Sidebar';
+import ImageUpload from '../components/ImageUpload';
+import axios from 'axios';
 
 const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
 const LAT_REGEX = /^-?(90(\.0+)?|[0-8]?\d(\.\d+)?)$/;
@@ -55,18 +57,11 @@ const EditRestaurant = () => {
   const [loadingInterests, setLoadingInterests] = useState(true);
 
   // Image uploads
+  // Image uploads
   const [logoImage, setLogoImage] = useState(null);
-  const [logoPreview, setLogoPreview] = useState(null);
-  const [existingLogo, setExistingLogo] = useState(null);
   const [detailImages, setDetailImages] = useState([]);
-  const [detailPreviews, setDetailPreviews] = useState([]);
-  const [existingDetailImages, setExistingDetailImages] = useState([]);
   const [foodMenuImages, setFoodMenuImages] = useState([]);
-  const [foodMenuPreviews, setFoodMenuPreviews] = useState([]);
-  const [existingFoodMenuImages, setExistingFoodMenuImages] = useState([]);
   const [beveragesMenuImages, setBeveragesMenuImages] = useState([]);
-  const [beveragesMenuPreviews, setBeveragesMenuPreviews] = useState([]);
-  const [existingBeveragesMenuImages, setExistingBeveragesMenuImages] = useState([]);
   const [uploadingImages, setUploadingImages] = useState(false);
 
   useEffect(() => {
@@ -124,16 +119,16 @@ const EditRestaurant = () => {
 
       // Set existing images
       if (restaurant.logo) {
-        setExistingLogo(restaurant.logo);
+        setLogoImage(restaurant.logo);
       }
-      if (restaurant.detailImage) {
-        setExistingDetailImages(Array.isArray(restaurant.detailImage) ? restaurant.detailImage : [restaurant.detailImage]);
+      if (restaurant.detailImages) {
+        setDetailImages(Array.isArray(restaurant.detailImages) ? restaurant.detailImages : [restaurant.detailImages]);
       }
       if (restaurant.foodMenuImages) {
-        setExistingFoodMenuImages(Array.isArray(restaurant.foodMenuImages) ? restaurant.foodMenuImages : [restaurant.foodMenuImages]);
+        setFoodMenuImages(Array.isArray(restaurant.foodMenuImages) ? restaurant.foodMenuImages : [restaurant.foodMenuImages]);
       }
       if (restaurant.beveragesMenuImages) {
-        setExistingBeveragesMenuImages(Array.isArray(restaurant.beveragesMenuImages) ? restaurant.beveragesMenuImages : [restaurant.beveragesMenuImages]);
+        setBeveragesMenuImages(Array.isArray(restaurant.beveragesMenuImages) ? restaurant.beveragesMenuImages : [restaurant.beveragesMenuImages]);
       }
     } catch (error) {
       showToast('Failed to fetch restaurant details', 'error');
@@ -488,343 +483,7 @@ const EditRestaurant = () => {
     }
   };
 
-  const handleRemoveLogo = () => {
-    setLogoImage(null);
-    setLogoPreview(null);
-    // Clear the file input
-    const fileInput = document.getElementById('logoImage');
-    if (fileInput) {
-      fileInput.value = '';
-    }
-  };
-
-  const handleRemoveDetailImage = (index) => {
-    const newImages = detailImages.filter((_, i) => i !== index);
-    const newPreviews = detailPreviews.filter((_, i) => i !== index);
-    setDetailImages(newImages);
-    setDetailPreviews(newPreviews);
-  };
-
-  const handleRemoveFoodMenuImage = (index) => {
-    const newImages = foodMenuImages.filter((_, i) => i !== index);
-    const newPreviews = foodMenuPreviews.filter((_, i) => i !== index);
-    setFoodMenuImages(newImages);
-    setFoodMenuPreviews(newPreviews);
-  };
-
-  const handleRemoveBeveragesMenuImage = (index) => {
-    const newImages = beveragesMenuImages.filter((_, i) => i !== index);
-    const newPreviews = beveragesMenuPreviews.filter((_, i) => i !== index);
-    setBeveragesMenuImages(newImages);
-    setBeveragesMenuPreviews(newPreviews);
-  };
-
-  const handleImageChange = (type, files) => {
-    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB in bytes
-    const MAX_IMAGES = 10;
-
-    if (type === 'logo') {
-      const file = files[0] || null;
-
-      // Validate file size
-      if (file && file.size > MAX_FILE_SIZE) {
-        setFieldErrors(prev => ({
-          ...prev,
-          logoImage: 'Image size must be less than 2 MB'
-        }));
-        return;
-      }
-
-      setLogoImage(file);
-      if (file) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setLogoPreview(reader.result);
-        };
-        reader.readAsDataURL(file);
-      } else {
-        setLogoPreview(null);
-      }
-    } else if (type === 'detail') {
-      if (!files || files.length === 0) {
-        setDetailImages([]);
-        setDetailPreviews([]);
-        return;
-      }
-
-      const fileArray = Array.from(files);
-      const totalImages = existingDetailImages.length + fileArray.length;
-
-      // Validate total count (existing + new should not exceed 10)
-      if (totalImages > MAX_IMAGES) {
-        setFieldErrors(prev => ({
-          ...prev,
-          detailImages: `Maximum ${MAX_IMAGES} images allowed. You have ${existingDetailImages.length} existing images and selected ${fileArray.length} new images.`
-        }));
-        // Clear the file input
-        const fileInput = document.getElementById('detailImages');
-        if (fileInput) {
-          fileInput.value = '';
-        }
-        return;
-      }
-
-      // Validate each file size
-      const oversizedFiles = fileArray.filter(file => file.size > MAX_FILE_SIZE);
-      if (oversizedFiles.length > 0) {
-        setFieldErrors(prev => ({
-          ...prev,
-          detailImages: `Some images exceed 2 MB limit. Please select smaller images.`
-        }));
-        return;
-      }
-
-      // Clear any previous errors
-      setFieldErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors.detailImages;
-        return newErrors;
-      });
-
-      // Set images first
-      setDetailImages(fileArray);
-
-      // Generate previews for all files
-      const previewPromises = fileArray.map((file, index) => {
-        return new Promise((resolve) => {
-          try {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              if (reader.result) {
-                resolve({ index, preview: reader.result });
-              } else {
-                console.error('No result for file:', file.name);
-                resolve({ index, preview: null });
-              }
-            };
-            reader.onerror = (error) => {
-              console.error('Error reading file:', file.name, error);
-              resolve({ index, preview: null });
-            };
-            reader.readAsDataURL(file);
-          } catch (error) {
-            console.error('Exception reading file:', file.name, error);
-            resolve({ index, preview: null });
-          }
-        });
-      });
-
-      Promise.all(previewPromises)
-        .then((results) => {
-          // Sort by index to maintain file order
-          results.sort((a, b) => a.index - b.index);
-          const previews = results.map(r => r.preview).filter(Boolean);
-
-          if (previews.length !== fileArray.length) {
-            console.warn(`Generated ${previews.length} previews out of ${fileArray.length} files`);
-          }
-
-          // Use functional update to ensure we're setting the latest state
-          setDetailPreviews(() => previews);
-
-          if (previews.length === 0) {
-            showToast('Failed to generate previews for selected images', 'error');
-          } else if (previews.length < fileArray.length) {
-            showToast(`Generated ${previews.length} out of ${fileArray.length} previews`, 'warning');
-          }
-        })
-        .catch((error) => {
-          console.error('Error in Promise.all for detail images:', error);
-          showToast('Error generating image previews', 'error');
-        });
-    } else if (type === 'foodMenu') {
-      if (!files || files.length === 0) {
-        setFoodMenuImages([]);
-        setFoodMenuPreviews([]);
-        return;
-      }
-
-      const fileArray = Array.from(files);
-      const totalImages = existingFoodMenuImages.length + fileArray.length;
-
-      // Validate total count (existing + new should not exceed 10)
-      if (totalImages > MAX_IMAGES) {
-        setFieldErrors(prev => ({
-          ...prev,
-          foodMenuImages: `Maximum ${MAX_IMAGES} images allowed. You have ${existingFoodMenuImages.length} existing images and selected ${fileArray.length} new images.`
-        }));
-        // Clear the file input
-        const fileInput = document.getElementById('foodMenuImages');
-        if (fileInput) {
-          fileInput.value = '';
-        }
-        return;
-      }
-
-      // Validate each file size
-      const oversizedFiles = fileArray.filter(file => file.size > MAX_FILE_SIZE);
-      if (oversizedFiles.length > 0) {
-        setFieldErrors(prev => ({
-          ...prev,
-          foodMenuImages: `Some images exceed 2 MB limit. Please select smaller images.`
-        }));
-        return;
-      }
-
-      // Clear any previous errors
-      setFieldErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors.foodMenuImages;
-        return newErrors;
-      });
-
-      // Set images first
-      setFoodMenuImages(fileArray);
-
-      // Generate previews for all files
-      const previewPromises = fileArray.map((file, index) => {
-        return new Promise((resolve) => {
-          try {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              if (reader.result) {
-                resolve({ index, preview: reader.result });
-              } else {
-                console.error('No result for file:', file.name);
-                resolve({ index, preview: null });
-              }
-            };
-            reader.onerror = (error) => {
-              console.error('Error reading file:', file.name, error);
-              resolve({ index, preview: null });
-            };
-            reader.readAsDataURL(file);
-          } catch (error) {
-            console.error('Exception reading file:', file.name, error);
-            resolve({ index, preview: null });
-          }
-        });
-      });
-
-      Promise.all(previewPromises)
-        .then((results) => {
-          // Sort by index to maintain file order
-          results.sort((a, b) => a.index - b.index);
-          const previews = results.map(r => r.preview).filter(Boolean);
-
-          if (previews.length !== fileArray.length) {
-            console.warn(`Generated ${previews.length} previews out of ${fileArray.length} files`);
-          }
-
-          // Use functional update to ensure we're setting the latest state
-          setFoodMenuPreviews(() => previews);
-
-          if (previews.length === 0) {
-            showToast('Failed to generate previews for selected images', 'error');
-          } else if (previews.length < fileArray.length) {
-            showToast(`Generated ${previews.length} out of ${fileArray.length} previews`, 'warning');
-          }
-        })
-        .catch((error) => {
-          console.error('Error in Promise.all for food menu images:', error);
-          showToast('Error generating image previews', 'error');
-        });
-    } else if (type === 'beveragesMenu') {
-      if (!files || files.length === 0) {
-        setBeveragesMenuImages([]);
-        setBeveragesMenuPreviews([]);
-        return;
-      }
-
-      const fileArray = Array.from(files);
-      const totalImages = existingBeveragesMenuImages.length + fileArray.length;
-
-      // Validate total count (existing + new should not exceed 10)
-      if (totalImages > MAX_IMAGES) {
-        setFieldErrors(prev => ({
-          ...prev,
-          beveragesMenuImages: `Maximum ${MAX_IMAGES} images allowed. You have ${existingBeveragesMenuImages.length} existing images and selected ${fileArray.length} new images.`
-        }));
-        // Clear the file input
-        const fileInput = document.getElementById('beveragesMenuImages');
-        if (fileInput) {
-          fileInput.value = '';
-        }
-        return;
-      }
-
-      // Validate each file size
-      const oversizedFiles = fileArray.filter(file => file.size > MAX_FILE_SIZE);
-      if (oversizedFiles.length > 0) {
-        setFieldErrors(prev => ({
-          ...prev,
-          beveragesMenuImages: `Some images exceed 2 MB limit. Please select smaller images.`
-        }));
-        return;
-      }
-
-      // Clear any previous errors
-      setFieldErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors.beveragesMenuImages;
-        return newErrors;
-      });
-
-      // Set images first
-      setBeveragesMenuImages(fileArray);
-
-      // Generate previews for all files
-      const previewPromises = fileArray.map((file, index) => {
-        return new Promise((resolve) => {
-          try {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              if (reader.result) {
-                resolve({ index, preview: reader.result });
-              } else {
-                console.error('No result for file:', file.name);
-                resolve({ index, preview: null });
-              }
-            };
-            reader.onerror = (error) => {
-              console.error('Error reading file:', file.name, error);
-              resolve({ index, preview: null });
-            };
-            reader.readAsDataURL(file);
-          } catch (error) {
-            console.error('Exception reading file:', file.name, error);
-            resolve({ index, preview: null });
-          }
-        });
-      });
-
-      Promise.all(previewPromises)
-        .then((results) => {
-          // Sort by index to maintain file order
-          results.sort((a, b) => a.index - b.index);
-          const previews = results.map(r => r.preview).filter(Boolean);
-
-          if (previews.length !== fileArray.length) {
-            console.warn(`Generated ${previews.length} previews out of ${fileArray.length} files`);
-          }
-
-          // Use functional update to ensure we're setting the latest state
-          setBeveragesMenuPreviews(() => previews);
-
-          if (previews.length === 0) {
-            showToast('Failed to generate previews for selected images', 'error');
-          } else if (previews.length < fileArray.length) {
-            showToast(`Generated ${previews.length} out of ${fileArray.length} previews`, 'warning');
-          }
-        })
-        .catch((error) => {
-          console.error('Error in Promise.all for beverages menu images:', error);
-          showToast('Error generating image previews', 'error');
-        });
-    }
-  };
-
-  const uploadImage = async (endpoint, formDataField, files) => {
+  const uploadImage = async (folderName, formDataField, files) => {
     if (!files || files.length === 0) return;
 
     const formData = new FormData();
@@ -837,13 +496,22 @@ const EditRestaurant = () => {
     }
 
     try {
-      await api.post(`/place/${id}/${endpoint}`, formData, {
+      let url = `https://api.darenow.in/addWithFolder/${folderName}`;
+
+      // Use addMultipleWithFolder for specific categories as requested
+      if (['detail-images', 'food-menu', 'beverages-menu'].includes(folderName)) {
+        url = `https://api.darenow.in/addMultipleWithFolder/${folderName}`;
+      }
+
+      const response = await axios.put(url, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
+          "Authorization": `Bearer ${localStorage.getItem("token")}`,
         },
       });
+      return response;
     } catch (error) {
-      console.error(`Error uploading ${endpoint}:`, error);
+      console.error(`Error uploading ${folderName}:`, error);
       throw error;
     }
   };
@@ -897,26 +565,63 @@ const EditRestaurant = () => {
       if (formData.lunch) payload.lunch = formData.lunch;
       if (formData.dinner) payload.dinner = formData.dinner;
 
-      await api.put(`/place/${id}`, payload);
-
       setUploadingImages(true);
 
-      // Upload images sequentially
-      if (logoImage) {
-        await uploadImage('addLogo', 'logoImage', [logoImage]);
+      // Separate new files from existing URLs
+      let logoUrl = typeof logoImage === 'string' ? logoImage : null;
+      let detailImageUrls = detailImages.filter(img => typeof img === 'string');
+      let foodMenuImageUrls = foodMenuImages.filter(img => typeof img === 'string');
+      let beveragesMenuImageUrls = beveragesMenuImages.filter(img => typeof img === 'string');
+
+      // New files to upload
+      const newLogo = logoImage instanceof File ? [logoImage] : [];
+      const newDetailImages = detailImages.filter(img => img instanceof File);
+      const newFoodMenuImages = foodMenuImages.filter(img => img instanceof File);
+      const newBeveragesMenuImages = beveragesMenuImages.filter(img => img instanceof File);
+
+      // Upload new images
+      if (newLogo.length > 0) {
+        const logoResponse = await uploadImage('logo', 'file', newLogo);
+        if (logoResponse && logoResponse.data) {
+          const files = logoResponse.data.files || logoResponse.data;
+          logoUrl = Array.isArray(files) ? files[0] : files;
+        }
       }
 
-      if (detailImages.length > 0) {
-        await uploadImage('addDetailImage', 'detailImage', detailImages);
+      if (newDetailImages.length > 0) {
+        const detailResponse = await uploadImage('detail-images', 'files', newDetailImages);
+        if (detailResponse && detailResponse.data) {
+          const files = detailResponse.data.files || detailResponse.data;
+          const newUrls = Array.isArray(files) ? files : [files];
+          detailImageUrls = [...detailImageUrls, ...newUrls];
+        }
       }
 
-      if (foodMenuImages.length > 0) {
-        await uploadImage('addFoodMenuImages', 'menuImages', foodMenuImages);
+      if (newFoodMenuImages.length > 0) {
+        const foodMenuResponse = await uploadImage('food-menu', 'files', newFoodMenuImages);
+        if (foodMenuResponse && foodMenuResponse.data) {
+          const files = foodMenuResponse.data.files || foodMenuResponse.data;
+          const newUrls = Array.isArray(files) ? files : [files];
+          foodMenuImageUrls = [...foodMenuImageUrls, ...newUrls];
+        }
       }
 
-      if (beveragesMenuImages.length > 0) {
-        await uploadImage('addBeveragesMenuImages', 'menuImages', beveragesMenuImages);
+      if (newBeveragesMenuImages.length > 0) {
+        const beveragesResponse = await uploadImage('beverages-menu', 'files', newBeveragesMenuImages);
+        if (beveragesResponse && beveragesResponse.data) {
+          const files = beveragesResponse.data.files || beveragesResponse.data;
+          const newUrls = Array.isArray(files) ? files : [files];
+          beveragesMenuImageUrls = [...beveragesMenuImageUrls, ...newUrls];
+        }
       }
+
+      // Add image fields to payload
+      payload.logo = logoUrl;
+      payload.detailImages = detailImageUrls;
+      payload.foodMenuImages = foodMenuImageUrls;
+      payload.beveragesMenuImages = beveragesMenuImageUrls;
+
+      await api.put(`/place/${id}`, payload);
 
       navigate('/restaurants');
     } catch (error) {
@@ -1509,249 +1214,100 @@ const EditRestaurant = () => {
                   <h2 className="text-xl font-semibold text-gray-900 mb-4">Update Images</h2>
 
                   <div className="space-y-6">
-                    <div>
-                      <label htmlFor="logoImage" className="block text-sm font-medium text-gray-700 mb-2">
-                        Logo Image
-                        <span className="text-xs text-gray-500 font-normal ml-2">(Max 2 MB)</span>
-                      </label>
-                      <input
-                        type="file"
-                        name="logoImage"
+                    <div className="max-w-xs">
+                      <ImageUpload
                         id="logoImage"
-                        accept="image/*"
-                        onChange={(e) => handleImageChange('logo', e.target.files)}
-                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                        label="Logo Image"
+                        required={false}
+                        multiple={false}
+                        value={logoImage}
+                        onChange={(file, error) => {
+                          if (error) {
+                            setFieldErrors(prev => ({ ...prev, logoImage: error }));
+                            setLogoImage(null);
+                          } else {
+                            setFieldErrors(prev => {
+                              const newErrors = { ...prev };
+                              delete newErrors.logoImage;
+                              return newErrors;
+                            });
+                            setLogoImage(file);
+                          }
+                        }}
+                        error={fieldErrors.logoImage}
+                        maxSize={2}
+                        maxFiles={1}
                       />
-                      <div className="mt-4 flex gap-4">
-                        {existingLogo && !logoPreview && (
-                          <div>
-                            <p className="text-sm text-gray-600 mb-2">Current Logo:</p>
-                            <img
-                              src={existingLogo}
-                              alt="Current logo"
-                              className="h-32 w-32 object-cover rounded-lg border border-[#ea432b]"
-                            />
-                          </div>
-                        )}
-                        {logoPreview && (
-                          <div>
-                            <p className="text-sm text-gray-600 mb-2">New Logo Preview:</p>
-                            <div className="relative w-fit">
-                              <img
-                                src={logoPreview}
-                                alt="Logo preview"
-                                className="h-32 w-32 object-cover rounded-lg border border-[#ea432b]"
-                              />
-                              <button
-                                type="button"
-                                onClick={handleRemoveLogo}
-                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 z-10"
-                                title="Remove logo"
-                              >
-                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
                     </div>
 
-                    <div>
-                      <label htmlFor="detailImages" className="block text-sm font-medium text-gray-700 mb-2">
-                        Detail Images (Multiple)
-                        <span className="text-xs text-gray-500 font-normal ml-2">(Max 10 images total, 2 MB each)</span>
-                      </label>
-                      <input
-                        type="file"
-                        name="detailImages"
-                        id="detailImages"
-                        accept="image/*"
-                        multiple
-                        onChange={(e) => handleImageChange('detail', e.target.files)}
-                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                      />
-                      {fieldErrors.detailImages && (
-                        <p className="mt-1 text-sm text-red-600">{fieldErrors.detailImages}</p>
-                      )}
-                      {(existingDetailImages.length > 0 || detailPreviews.length > 0) && (
-                        <div className="mt-4">
-                          {existingDetailImages.length > 0 && (
-                            <div className="mb-4">
-                              <p className="text-sm text-gray-600 mb-2">Current Detail Images ({existingDetailImages.length}):</p>
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                {existingDetailImages.map((url, index) => (
-                                  <img
-                                    key={index}
-                                    src={url}
-                                    alt={`Detail ${index + 1}`}
-                                    className="h-24 w-24 object-cover rounded-lg border border-[#ea432b]"
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                          {detailPreviews.length > 0 && (
-                            <div>
-                              <p className="text-sm text-gray-600 mb-2">New Detail Images Preview ({detailPreviews.length}):</p>
-                              <div className="flex flex-wrap gap-4">
-                                {detailPreviews.map((preview, index) => (
-                                  <div key={`detail-preview-${index}`} className="relative">
-                                    <img
-                                      src={preview}
-                                      alt={`Detail preview ${index + 1}`}
-                                      className="h-24 w-24 object-cover rounded-lg border border-[#ea432b]"
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={() => handleRemoveDetailImage(index)}
-                                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 z-10 shadow-md"
-                                      title="Remove image"
-                                      aria-label="Remove image"
-                                    >
-                                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                      </svg>
-                                    </button>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                    <ImageUpload
+                      id="detailImages"
+                      label="Detail Images (Multiple)"
+                      required={false}
+                      multiple={true}
+                      value={detailImages}
+                      onChange={(files, error) => {
+                        if (error) {
+                          setFieldErrors(prev => ({ ...prev, detailImages: error }));
+                        } else {
+                          setFieldErrors(prev => {
+                            const newErrors = { ...prev };
+                            delete newErrors.detailImages;
+                            return newErrors;
+                          });
+                          setDetailImages(files || []);
+                        }
+                      }}
+                      error={fieldErrors.detailImages}
+                      maxSize={2}
+                      maxFiles={10}
+                    />
 
-                    <div>
-                      <label htmlFor="foodMenuImages" className="block text-sm font-medium text-gray-700 mb-2">
-                        Food Menu Images (Multiple)
-                        <span className="text-xs text-gray-500 font-normal ml-2">(Max 10 images total, 2 MB each)</span>
-                      </label>
-                      <input
-                        type="file"
-                        name="foodMenuImages"
-                        id="foodMenuImages"
-                        accept="image/*"
-                        multiple
-                        onChange={(e) => handleImageChange('foodMenu', e.target.files)}
-                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                      />
-                      {fieldErrors.foodMenuImages && (
-                        <p className="mt-1 text-sm text-red-600">{fieldErrors.foodMenuImages}</p>
-                      )}
-                      {(existingFoodMenuImages.length > 0 || foodMenuPreviews.length > 0) && (
-                        <div className="mt-4">
-                          {existingFoodMenuImages.length > 0 && (
-                            <div className="mb-4">
-                              <p className="text-sm text-gray-600 mb-2">Current Food Menu Images ({existingFoodMenuImages.length}):</p>
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                {existingFoodMenuImages.map((url, index) => (
-                                  <img
-                                    key={index}
-                                    src={url}
-                                    alt={`Food menu ${index + 1}`}
-                                    className="h-24 w-24 object-cover rounded-lg border border-[#ea432b]"
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                          {foodMenuPreviews.length > 0 && (
-                            <div>
-                              <p className="text-sm text-gray-600 mb-2">New Food Menu Images Preview ({foodMenuPreviews.length}):</p>
-                              <div className="flex flex-wrap gap-4">
-                                {foodMenuPreviews.map((preview, index) => (
-                                  <div key={`food-menu-preview-${index}`} className="relative">
-                                    <img
-                                      src={preview}
-                                      alt={`Food menu preview ${index + 1}`}
-                                      className="h-24 w-24 object-cover rounded-lg border border-[#ea432b]"
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={() => handleRemoveFoodMenuImage(index)}
-                                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 z-10 shadow-md"
-                                      title="Remove image"
-                                      aria-label="Remove image"
-                                    >
-                                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                      </svg>
-                                    </button>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                    <ImageUpload
+                      id="foodMenuImages"
+                      label="Food Menu Images (Multiple)"
+                      required={false}
+                      multiple={true}
+                      value={foodMenuImages}
+                      onChange={(files, error) => {
+                        if (error) {
+                          setFieldErrors(prev => ({ ...prev, foodMenuImages: error }));
+                        } else {
+                          setFieldErrors(prev => {
+                            const newErrors = { ...prev };
+                            delete newErrors.foodMenuImages;
+                            return newErrors;
+                          });
+                          setFoodMenuImages(files || []);
+                        }
+                      }}
+                      error={fieldErrors.foodMenuImages}
+                      maxSize={2}
+                      maxFiles={10}
+                    />
 
-                    <div>
-                      <label htmlFor="beveragesMenuImages" className="block text-sm font-medium text-gray-700 mb-2">
-                        Beverages Menu Images (Multiple)
-                        <span className="text-xs text-gray-500 font-normal ml-2">(Max 10 images total, 2 MB each)</span>
-                      </label>
-                      <input
-                        type="file"
-                        name="beveragesMenuImages"
-                        id="beveragesMenuImages"
-                        accept="image/*"
-                        multiple
-                        onChange={(e) => handleImageChange('beveragesMenu', e.target.files)}
-                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                      />
-                      {fieldErrors.beveragesMenuImages && (
-                        <p className="mt-1 text-sm text-red-600">{fieldErrors.beveragesMenuImages}</p>
-                      )}
-                      {(existingBeveragesMenuImages.length > 0 || beveragesMenuPreviews.length > 0) && (
-                        <div className="mt-4">
-                          {existingBeveragesMenuImages.length > 0 && (
-                            <div className="mb-4">
-                              <p className="text-sm text-gray-600 mb-2">Current Beverages Menu Images ({existingBeveragesMenuImages.length}):</p>
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                {existingBeveragesMenuImages.map((url, index) => (
-                                  <img
-                                    key={index}
-                                    src={url}
-                                    alt={`Beverages menu ${index + 1}`}
-                                    className="h-24 w-24 object-cover rounded-lg border border-[#ea432b]"
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                          {beveragesMenuPreviews.length > 0 && (
-                            <div>
-                              <p className="text-sm text-gray-600 mb-2">New Beverages Menu Images Preview ({beveragesMenuPreviews.length}):</p>
-                              <div className="flex flex-wrap gap-4">
-                                {beveragesMenuPreviews.map((preview, index) => (
-                                  <div key={`beverages-menu-preview-${index}`} className="relative">
-                                    <img
-                                      src={preview}
-                                      alt={`Beverages menu preview ${index + 1}`}
-                                      className="h-24 w-24 object-cover rounded-lg border border-[#ea432b]"
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={() => handleRemoveBeveragesMenuImage(index)}
-                                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 z-10 shadow-md"
-                                      title="Remove image"
-                                      aria-label="Remove image"
-                                    >
-                                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                      </svg>
-                                    </button>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                    <ImageUpload
+                      id="beveragesMenuImages"
+                      label="Beverages Menu Images (Multiple)"
+                      required={false}
+                      multiple={true}
+                      value={beveragesMenuImages}
+                      onChange={(files, error) => {
+                        if (error) {
+                          setFieldErrors(prev => ({ ...prev, beveragesMenuImages: error }));
+                        } else {
+                          setFieldErrors(prev => {
+                            const newErrors = { ...prev };
+                            delete newErrors.beveragesMenuImages;
+                            return newErrors;
+                          });
+                          setBeveragesMenuImages(files || []);
+                        }
+                      }}
+                      error={fieldErrors.beveragesMenuImages}
+                      maxSize={2}
+                      maxFiles={10}
+                    />
                   </div>
                 </div>
 

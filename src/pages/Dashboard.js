@@ -13,7 +13,7 @@ const Dashboard = () => {
 
   // Mall Analytics States
   const [malls, setMalls] = useState([]);
-  const [selectedMallId, setSelectedMallId] = useState('695e4e0cb54d9221f894eef2');
+  const [selectedMallId, setSelectedMallId] = useState('');
   const [dateRange, setDateRange] = useState({
     from: '2026-01-01',
     to: '2027-01-31'
@@ -40,9 +40,11 @@ const Dashboard = () => {
       const mallData = response.data?.data?.content || [];
       setMalls(mallData);
 
-      // If the default ID is not in the list and we have malls, 
-      // maybe we should keep the default or pick the first one. 
-      // Given the user request, I'll keep the default ID if it's there.
+      if (mallData.length > 0) {
+        setSelectedMallId(mallData[0].mallId);
+      } else {
+        setSelectedMallId(''); // Fallback to default ID
+      }
     } catch (error) {
       console.error('Error fetching malls:', error);
     }
@@ -66,18 +68,17 @@ const Dashboard = () => {
   useEffect(() => {
     const init = async () => {
       setLoading(true);
-      await Promise.all([fetchMalls()]);
-      await fetchAnalytics();
+      await Promise.all([fetchStats(), fetchMalls()]);
       setLoading(false);
     };
     init();
   }, []);
 
   useEffect(() => {
-    if (!loading) {
+    if (!loading && selectedMallId) {
       fetchAnalytics();
     }
-  }, [selectedMallId, dateRange, fetchAnalytics]);
+  }, [selectedMallId, dateRange, fetchAnalytics, loading]);
 
   if (loading) {
     return (
@@ -107,20 +108,27 @@ const Dashboard = () => {
 
                 <div className="flex flex-wrap items-center gap-4">
                   {/* Mall Selector */}
-                  <div className="flex flex-col">
+                  <div className="flex flex-col min-w-[240px]">
                     <label className="text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wider">Select Mall</label>
-                    <select
-                      value={selectedMallId}
-                      onChange={(e) => setSelectedMallId(e.target.value)}
-                      className="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5"
-                    >
-                      <option value="695e4e0cb54d9221f894eef2">Default Mall</option>
-                      {malls.map((mall) => (
-                        <option key={mall.mallId} value={mall.mallId}>
-                          {mall.mallName}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        value={selectedMallId}
+                        onChange={(e) => setSelectedMallId(e.target.value)}
+                        className="appearance-none bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 block w-full p-3 transition-all cursor-pointer hover:bg-white hover:border-blue-300"
+                      >
+
+                        {malls.map((mall) => (
+                          <option key={mall.mallId} value={mall.mallId}>
+                            {mall.mallName}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-500">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Date From */}
@@ -130,7 +138,7 @@ const Dashboard = () => {
                       type="date"
                       value={dateRange.from}
                       onChange={(e) => setDateRange(prev => ({ ...prev, from: e.target.value }))}
-                      className="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5"
+                      className="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 block p-3 transition-all hover:bg-white hover:border-blue-300"
                     />
                   </div>
 
@@ -141,7 +149,7 @@ const Dashboard = () => {
                       type="date"
                       value={dateRange.to}
                       onChange={(e) => setDateRange(prev => ({ ...prev, to: e.target.value }))}
-                      className="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5"
+                      className="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 block p-3 transition-all hover:bg-white hover:border-blue-300"
                     />
                   </div>
                 </div>

@@ -20,25 +20,42 @@ const RestaurantList = () => {
       setLoading(true);
       setError('');
 
-      // Use "Res" for restaurant type when search is empty, otherwise use the search term
+      // Try different endpoint patterns based on what works
+      let response;
       const searchQuery = search.trim();
-      const searchParam = searchQuery || '';
-      const response = await api.get(
-        `/place/pageNo/${page}/pageSize/${pageSize}?search=${searchParam}`
-      );
+
+      try {
+        // First try: Path parameter approach /place/pageNo/{page}/pageSize/{size}?search={term}
+        response = await api.get(`/place/pageNo/${page}/pageSize/${pageSize}?search=${encodeURIComponent(searchQuery)}`);
+      } catch (firstError) {
+        console.log('First endpoint failed, trying alternative...', firstError);
+
+        // Second try: Original search pattern as fallback
+        try {
+          const searchParam = searchQuery || 'Res';
+          response = await api.get(`/place/search/${encodeURIComponent(searchParam)}/pageNo/${page}/pageSize/${pageSize}`);
+        } catch (secondError) {
+          console.log('Second endpoint failed, trying third alternative...', secondError);
+
+          // Third try: Simple /restaurants endpoint
+          response = await api.get(`/restaurants?pageNo=${page}&pageSize=${pageSize}`);
+        }
+      }
 
       // Handle different possible response structures
-      const restaurantsData = response.data?.data || response.data || [];
+      const restaurantsData = response.data?.data?.content || response.data?.data || response.data?.restaurants || response.data || [];
       setRestaurants(Array.isArray(restaurantsData) ? restaurantsData : []);
 
       // Update pagination info if available in response
-      if (response.data?.totalPages) {
+      if (response.data?.data?.totalPages) {
+        setTotalPages(response.data.data.totalPages);
+      } else if (response.data?.totalPages) {
         setTotalPages(response.data.totalPages);
       } else if (response.data?.total) {
         setTotalPages(Math.ceil(response.data.total / pageSize));
       }
     } catch (error) {
-      setError(error.response?.data?.message || error.message || 'Failed to fetch restaurants');
+      setError(error.response?.data?.message || error.message || 'Failed to fetch restaurants. Please check if the API endpoint is correct.');
       console.error('Error fetching restaurants:', error);
       setRestaurants([]);
     } finally {
@@ -205,7 +222,7 @@ const RestaurantList = () => {
                             {restaurant.image && (
                               <img
                                 className="h-10 w-10 rounded-full object-cover"
-                                src={`http://localhost:5001/uploads/${restaurant.image}`}
+                                src={`https://api.darenow.in/uploads/${restaurant.image}`}
                                 alt={restaurant.name}
                               />
                             )}

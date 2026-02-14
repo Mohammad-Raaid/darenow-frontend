@@ -48,16 +48,23 @@ const TimePicker = ({ value, onChange, name, id, className, error }) => {
     };
   }, [isOpen]);
 
-  const handleTimeChange = (newHours, newMinutes, newPeriod) => {
+  const handleTimeChange = (newHours, newMinutes, newPeriod, shouldClose = false) => {
     let hour24 = 0;
+    let h = parseInt(newHours || '12');
+
     if (newPeriod === 'AM') {
-      hour24 = newHours === '12' ? 0 : parseInt(newHours || 0);
+      hour24 = h === 12 ? 0 : h;
     } else {
-      hour24 = newHours === '12' ? 12 : parseInt(newHours || 0) + 12;
+      hour24 = h === 12 ? 12 : h + 12;
     }
-    
-    const timeString = `${hour24.toString().padStart(2, '0')}:${newMinutes.padStart(2, '0')}`;
-    
+
+    // Ensure inputs are valid
+    const safeMinutes = (newMinutes || '00').toString().padStart(2, '0');
+    // We already handled hours logic loosely, but ensuring string format won't hurt
+
+    // Format to HH:MM (24h)
+    const timeString = `${hour24.toString().padStart(2, '0')}:${safeMinutes}`;
+
     // Create a synthetic event that matches the expected format
     const syntheticEvent = {
       target: {
@@ -66,9 +73,11 @@ const TimePicker = ({ value, onChange, name, id, className, error }) => {
         type: 'time'
       }
     };
-    
+
     onChange(syntheticEvent);
-    setIsOpen(false);
+    if (shouldClose) {
+      setIsOpen(false);
+    }
   };
 
   const formatDisplayTime = () => {
@@ -119,11 +128,10 @@ const TimePicker = ({ value, onChange, name, id, className, error }) => {
                     type="button"
                     onClick={() => {
                       const newHours = hour;
-                      handleTimeChange(newHours, minutes || '00', period);
+                      handleTimeChange(newHours, minutes || '00', period, false);
                     }}
-                    className={`w-full px-3 py-2 text-sm hover:bg-blue-50 ${
-                      hours === hour ? 'bg-blue-100 font-semibold' : ''
-                    }`}
+                    className={`w-full px-3 py-2 text-sm hover:bg-blue-50 ${hours === hour ? 'bg-blue-100 font-semibold' : ''
+                      }`}
                   >
                     {hour}
                   </button>
@@ -141,11 +149,10 @@ const TimePicker = ({ value, onChange, name, id, className, error }) => {
                     type="button"
                     onClick={() => {
                       const newMinutes = minute;
-                      handleTimeChange(hours || '01', newMinutes, period);
+                      handleTimeChange(hours || '12', newMinutes, period, false);
                     }}
-                    className={`w-full px-3 py-2 text-sm hover:bg-blue-50 ${
-                      minutes === minute ? 'bg-blue-100 font-semibold' : ''
-                    }`}
+                    className={`w-full px-3 py-2 text-sm hover:bg-blue-50 ${minutes === minute ? 'bg-blue-100 font-semibold' : ''
+                      }`}
                   >
                     {minute}
                   </button>
@@ -160,22 +167,20 @@ const TimePicker = ({ value, onChange, name, id, className, error }) => {
                 <button
                   type="button"
                   onClick={() => {
-                    handleTimeChange(hours || '01', minutes || '00', 'AM');
+                    handleTimeChange(hours || '12', minutes || '00', 'AM', true);
                   }}
-                  className={`w-full px-3 py-2 text-sm hover:bg-blue-50 ${
-                    period === 'AM' ? 'bg-blue-100 font-semibold' : ''
-                  }`}
+                  className={`w-full px-3 py-2 text-sm hover:bg-blue-50 ${period === 'AM' ? 'bg-blue-100 font-semibold' : ''
+                    }`}
                 >
                   AM
                 </button>
                 <button
                   type="button"
                   onClick={() => {
-                    handleTimeChange(hours || '01', minutes || '00', 'PM');
+                    handleTimeChange(hours || '12', minutes || '00', 'PM', true);
                   }}
-                  className={`w-full px-3 py-2 text-sm hover:bg-blue-50 border-t border-gray-200 ${
-                    period === 'PM' ? 'bg-blue-100 font-semibold' : ''
-                  }`}
+                  className={`w-full px-3 py-2 text-sm hover:bg-blue-50 border-t border-gray-200 ${period === 'PM' ? 'bg-blue-100 font-semibold' : ''
+                    }`}
                 >
                   PM
                 </button>

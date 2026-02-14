@@ -15,11 +15,13 @@ const Login = () => {
   const from = location.state?.from?.pathname || '/dashboard';
 
   useEffect(() => {
+    // Check if admin is already logged in
     if (isAuthenticated) {
       navigate(from, { replace: true });
       return;
     }
-
+    
+    // Check if restaurant is already logged in
     const restaurantToken = localStorage.getItem('restaurantToken');
     const restaurant = localStorage.getItem('restaurant');
     if (restaurantToken && restaurant) {
@@ -52,7 +54,7 @@ const Login = () => {
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Sign in to your account
           </h2>
-
+         
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (

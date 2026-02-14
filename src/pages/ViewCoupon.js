@@ -169,6 +169,39 @@ const ViewCoupon = () => {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Coupon Image Card */}
+                            <div className="bg-white shadow-sm ring-1 ring-gray-200 rounded-2xl p-8">
+                                <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-6">Coupon Image</h3>
+                                {coupon.CouponsImage ? (
+                                    <div className="max-w-xs">
+                                        <div className="relative group rounded-lg overflow-hidden border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow">
+                                            <div className="aspect-square relative bg-gray-100">
+                                                <img
+                                                    src={coupon.CouponsImage}
+                                                    alt="Coupon Image"
+                                                    className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                                                    onClick={() => window.open(coupon.CouponsImage, '_blank')}
+                                                    onError={(e) => { e.target.style.display = 'none'; }}
+                                                />
+                                            </div>
+                                        </div>
+                                        <p className="mt-2 text-xs text-gray-400 flex items-center">
+                                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                            </svg>
+                                            Click to view full size
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
+                                        <svg className="w-10 h-10 text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        <p className="text-sm text-gray-500 font-medium">No image uploaded</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         {/* Sidebar Info Card */}

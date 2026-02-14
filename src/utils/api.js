@@ -1,15 +1,15 @@
 import axios from 'axios';
 // test
 
-const API_URL = process.env.REACT_APP_API_BASE_URL;
-console.log(API_URL);
-
+const API_URL = 'https://api.darenow.in/api';
 
 const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
   },
+  withCredentials: false, // Set to true if API requires cookies
 });
 
 // Request interceptor to add auth token

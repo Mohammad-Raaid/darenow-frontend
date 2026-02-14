@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo } from 'react';
 import api from '../utils/api';
 import axios from 'axios';
 
@@ -58,18 +58,20 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const login = async (username, password) => {
+  const login = useCallback(async (username, password) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       const encodedUsername = encodeURIComponent(username);
       const encodedPassword = encodeURIComponent(password);
-      const response = await api.get(`/admin/login/username/${encodedUsername}/password/${encodedPassword}`);
+      const API_URL = process.env.REACT_APP_API_BASE_URL || 'https://ec2-3-111-88-208.ap-south-1.compute.amazonaws.com:3000/api';
+      const response = await axios.get(`${API_URL}/admin/login/username/${encodedUsername}/password/${encodedPassword}`);
 
+      // API returns JSON with token and adminData
       const token = response.data?.data?.token;
       const adminData = response.data?.data?.adminData;
       const user = {
         username: adminData?.userName || username,
-        name: adminData?.userName || username,
+        name: adminData?.userName || username, // Add name field for dashboard display
         isAdmin: true,
         adminData
       };
@@ -90,9 +92,9 @@ export const AuthProvider = ({ children }) => {
         message: error.response?.data?.message || error.message || 'Login failed',
       };
     }
-  };
+  }, []);
 
-  const register = async (name, email, password) => {
+  const register = useCallback(async (name, email, password) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       const response = await api.post('/auth/register', { name, email, password });
@@ -114,15 +116,15 @@ export const AuthProvider = ({ children }) => {
         message: error.response?.data?.message || 'Registration failed',
       };
     }
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     dispatch({ type: 'LOGOUT' });
-  };
+  }, []);
 
-  const forgotPassword = async (email) => {
+  const forgotPassword = useCallback(async (email) => {
     try {
       await api.post('/auth/forgot-password', { email });
       return { success: true, message: 'Password reset email sent' };
@@ -132,9 +134,9 @@ export const AuthProvider = ({ children }) => {
         message: error.response?.data?.message || 'Failed to send reset email',
       };
     }
-  };
+  }, []);
 
-  const resetPassword = async (token, password) => {
+  const resetPassword = useCallback(async (token, password) => {
     try {
       await api.post('/auth/reset-password', { token, password });
       return { success: true, message: 'Password reset successful' };
@@ -144,19 +146,19 @@ export const AuthProvider = ({ children }) => {
         message: error.response?.data?.message || 'Password reset failed',
       };
     }
-  };
+  }, []);
+
+  const value = useMemo(() => ({
+    ...state,
+    login,
+    register,
+    logout,
+    forgotPassword,
+    resetPassword,
+  }), [state, login, register, logout, forgotPassword, resetPassword]);
 
   return (
-    <AuthContext.Provider
-      value={{
-        ...state,
-        login,
-        register,
-        logout,
-        forgotPassword,
-        resetPassword,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 
 const ToastContext = createContext();
 
@@ -16,7 +16,7 @@ export const ToastProvider = ({ children }) => {
   const showToast = useCallback((message, type = 'error') => {
     const id = Date.now() + Math.random();
     const newToast = { id, message, type };
-    
+
     setToasts((prev) => [...prev, newToast]);
 
     // Auto remove after 5 seconds
@@ -29,8 +29,10 @@ export const ToastProvider = ({ children }) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
+  const value = useMemo(() => ({ showToast }), [showToast]);
+
   return (
-    <ToastContext.Provider value={{ showToast }}>
+    <ToastContext.Provider value={value}>
       {children}
       <ToastContainer toasts={toasts} removeToast={removeToast} />
     </ToastContext.Provider>

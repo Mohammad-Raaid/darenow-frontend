@@ -281,13 +281,18 @@ const CouponList = () => {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold tracking-tight shadow-sm ${coupon.active && !coupon.deleted
-                                                        ? 'bg-green-100 text-green-700 border border-green-200'
-                                                        : 'bg-gray-100 text-gray-600 border border-gray-200'
-                                                        }`}>
-                                                        <span className={`h-1.5 w-1.5 rounded-full mr-1.5 ${coupon.active && !coupon.deleted ? 'bg-green-500' : 'bg-gray-400'}`}></span>
-                                                        {coupon.active && !coupon.deleted ? 'ACTIVE' : 'INACTIVE'}
-                                                    </span>
+                                                    <button
+                                                        onClick={() => handleStatusToggle(coupon.couponId, coupon.active)}
+                                                        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#EB422B] focus:ring-offset-2 ${coupon.active && !coupon.deleted ? 'bg-[#EB422B]' : 'bg-gray-200'}`}
+                                                        role="switch"
+                                                        aria-checked={coupon.active}
+                                                        title={coupon.active ? 'Deactivate Coupon' : 'Activate Coupon'}
+                                                    >
+                                                        <span
+                                                            aria-hidden="true"
+                                                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${coupon.active && !coupon.deleted ? 'translate-x-5' : 'translate-x-0'}`}
+                                                        />
+                                                    </button>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                     <div className="flex items-center gap-3">
@@ -297,12 +302,18 @@ const CouponList = () => {
                                                         >
                                                             View
                                                         </Link>
-                                                        <button
+                                                        {/* <button
                                                             onClick={() => handleStatusToggle(coupon.couponId, coupon.active)}
-                                                            className="text-orange-600 hover:text-orange-800 font-semibold"
+                                                            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#EB422B] focus:ring-offset-2 ${coupon.active && !coupon.deleted ? 'bg-[#EB422B]' : 'bg-gray-200'}`}
+                                                            role="switch"
+                                                            aria-checked={coupon.active}
+                                                            title={coupon.active ? 'Deactivate Coupon' : 'Activate Coupon'}
                                                         >
-                                                            Change Status
-                                                        </button>
+                                                            <span
+                                                                aria-hidden="true"
+                                                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${coupon.active && !coupon.deleted ? 'translate-x-5' : 'translate-x-0'}`}
+                                                            />
+                                                        </button> */}
                                                         {coupon.usedCount === 0 && new Date(coupon.validFrom) > new Date() && (
                                                             <>
                                                                 <Link

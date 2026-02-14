@@ -3,6 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import api from '../utils/api';
 import { useToast } from '../components/Toast';
 import Sidebar from '../components/Sidebar';
+import ImageUpload from '../components/ImageUpload';
 
 const EditCoupon = () => {
     const { id } = useParams();
@@ -19,6 +20,9 @@ const EditCoupon = () => {
         applicableMallIds: [],
         active: true
     });
+
+    const [couponImage, setCouponImage] = useState(null);
+
 
     const [malls, setMalls] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -69,7 +73,12 @@ const EditCoupon = () => {
                     applicableMallIds: Array.isArray(coupon.applicableMallIds) ? coupon.applicableMallIds.map(Number) : [],
                     active: coupon.active ?? true
                 });
+
+                if (coupon.CouponsImage) {
+                    setCouponImage(coupon.CouponsImage);
+                }
             }
+
         } catch (error) {
             console.error('Error fetching coupon:', error);
             showToast('Failed to load coupon details', 'error');
@@ -127,8 +136,13 @@ const EditCoupon = () => {
             }
         }
 
+        if (!couponImage) {
+            errors.couponImage = 'Coupon image is required';
+        }
+
         setFieldErrors(errors);
         return Object.keys(errors).length === 0;
+
     };
 
     const handleSubmit = async (e) => {
@@ -145,7 +159,8 @@ const EditCoupon = () => {
 
         setSubmitting(true);
         try {
-            const payload = {
+            // Construct coupon object
+            const couponData = {
                 ...formData,
                 value: Number(formData.value),
                 usageLimit: Number(formData.usageLimit),
@@ -153,9 +168,23 @@ const EditCoupon = () => {
                 applicableMallIds: formData.applicableMallIds.map(Number),
                 validFrom: new Date(formData.validFrom).toISOString(),
                 validTill: new Date(formData.validTill).toISOString(),
+                CouponsImage: typeof couponImage === 'string' ? couponImage : null
             };
 
-            await api.put(`/admin/coupons/${id}`, payload);
+            const submitFormData = new FormData();
+            submitFormData.append('coupon', JSON.stringify(couponData));
+
+            // Append file if it's a new upload
+            if (couponImage instanceof File) {
+                submitFormData.append('CouponsImage', couponImage);
+            }
+
+            await api.put(`/admin/coupons/${id}`, submitFormData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                }
+            });
+
             showToast('Coupon updated successfully!', 'success');
             navigate('/coupons');
         } catch (error) {
@@ -205,6 +234,35 @@ const EditCoupon = () => {
                                 </span>
                                 Coupon Details
                             </h2>
+
+                            <div className="mb-8">
+                                <div className="max-w-xs">
+                                    <ImageUpload
+                                        id="couponImage"
+                                        label="Coupon Image *"
+                                        required={true}
+                                        multiple={false}
+                                        value={couponImage}
+                                        onChange={(file, error) => {
+                                            if (error) {
+                                                setFieldErrors(prev => ({ ...prev, couponImage: error }));
+                                                setCouponImage(null);
+                                            } else {
+                                                setFieldErrors(prev => {
+                                                    const newErrors = { ...prev };
+                                                    delete newErrors.couponImage;
+                                                    return newErrors;
+                                                });
+                                                setCouponImage(file);
+                                            }
+                                        }}
+                                        error={fieldErrors.couponImage}
+                                        maxSize={2}
+                                        maxFiles={1}
+                                    />
+                                </div>
+                            </div>
+
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div>

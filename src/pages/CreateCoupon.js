@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import api from '../utils/api';
 import { useToast } from '../components/Toast';
 import Sidebar from '../components/Sidebar';
+import ImageUpload from '../components/ImageUpload';
 
 const CreateCoupon = () => {
     const navigate = useNavigate();
@@ -20,6 +21,7 @@ const CreateCoupon = () => {
     });
 
     const [malls, setMalls] = useState([]);
+    const [couponImage, setCouponImage] = useState(null);
     const [loadingMalls, setLoadingMalls] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [fieldErrors, setFieldErrors] = useState({});
@@ -90,10 +92,13 @@ const CreateCoupon = () => {
         if (!formData.usageLimit || formData.usageLimit <= 0) errors.usageLimit = 'Usage limit must be at least 1';
         if (formData.stepsRequired === '' || formData.stepsRequired < 0) errors.stepsRequired = 'Steps required is required';
 
-        if (formData.validFrom && formData.validTill) {
-            if (new Date(formData.validFrom) >= new Date(formData.validTill)) {
-                errors.validTill = 'Expiry date must be after start date';
-            }
+        if (new Date(formData.validFrom) >= new Date(formData.validTill)) {
+            errors.validTill = 'Expiry date must be after start date';
+        }
+
+
+        if (!couponImage) {
+            errors.couponImage = 'Coupon image is required';
         }
 
         setFieldErrors(errors);
@@ -117,9 +122,8 @@ const CreateCoupon = () => {
         setSubmitting(true);
 
         try {
-            const payload = {
+            const couponData = {
                 ...formData,
-
                 value: Number(formData.value),
                 usageLimit: Number(formData.usageLimit),
                 stepsRequired: Number(formData.stepsRequired),
@@ -128,7 +132,19 @@ const CreateCoupon = () => {
                 validTill: new Date(formData.validTill).toISOString(),
             };
 
-            await api.post('/admin/coupons', payload);
+            const submitData = new FormData();
+            submitData.append('coupon', JSON.stringify(couponData));
+
+            if (couponImage) {
+                submitData.append('CouponsImage', couponImage);
+            }
+
+            await api.post('/admin/coupons', submitData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
             showToast('Coupon created successfully!', 'success');
             navigate('/coupons');
 
@@ -264,19 +280,27 @@ const CreateCoupon = () => {
                                         <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#EB422B]"></div>
                                     </label>
                                 </div>
-                                {/* <div className="flex items-center pt-8">
-                                    <label className="relative inline-flex items-center cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            name="active"
-                                            checked={formData.active}
-                                            onChange={handleChange}
-                                            className="sr-only peer"
-                                        />
-                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:width-5 after:transition-all peer-checked:bg-[#EB422B]"></div>
-                                        <span className="ml-3 text-sm font-bold text-gray-900">Active Status</span>
-                                    </label>
-                                </div> */}
+
+                            </div>
+
+                            {/* Image Upload Section */}
+                            <div className="mt-8">
+                                <h3 className="text-lg font-bold text-gray-900 mb-4">Coupon Image *</h3>
+                                <ImageUpload
+                                    value={couponImage}
+                                    onChange={(file) => {
+                                        setCouponImage(file);
+                                        if (file && fieldErrors.couponImage) {
+                                            setFieldErrors(prev => {
+                                                const newErrors = { ...prev };
+                                                delete newErrors.couponImage;
+                                                return newErrors;
+                                            });
+                                        }
+                                    }}
+                                    error={fieldErrors.couponImage}
+                                    label=""
+                                />
                             </div>
                         </div>
 

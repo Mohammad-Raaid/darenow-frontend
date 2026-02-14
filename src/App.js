@@ -36,16 +36,13 @@ import RewardList from './pages/RewardList';
 import CreateReward from './pages/CreateReward';
 
 function App() {
-  const restaurant = localStorage.getItem('restaurant');
-  console.log(restaurant);
   return (
     <AuthProvider>
       <ToastProvider>
         <Router>
           <div className="min-h-screen bg-gray-50">
-            {restaurant ? <Navbar /> : null}
+            <Navbar />
             <main className="pt-16">
-
               <Routes>
                 <Route path="/" element={<Navigate to="/login" replace />} />
                 <Route path="/login" element={<Login />} />
@@ -212,7 +209,7 @@ function App() {
                 />
               </Routes>
             </main>
-            {restaurant ? <Footer /> : null}
+            <Footer />
           </div>
         </Router>
       </ToastProvider>
